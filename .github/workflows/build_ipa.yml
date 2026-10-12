@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: macos-14
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -141,3 +143,28 @@ jobs:
           path: |
             dist/Husk_2.0_zh-Hans.ipa
             dist/Husk_2.0_zh-Hans.tipa
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2.0.0-zh
+          name: "Husk 2.0 简体中文汉化版"
+          draft: false
+          prerelease: false
+          body: |
+            ## Husk 2.0 简体中文汉化版 (Release)
+
+            本版本基于官方最新 2.0 版本源码，由 Xcode 16 原生编译生成，彻底解决汇编短字符串内联导致的汉化遗漏问题：
+            - **全量汉化**：涵盖应用全局页面、虚拟化配置、JIT 状态调试、LiveContainer 对接与控制台交互提示（全面汉化 59 个 Swift 原生代码文件）；
+            - **专有名词保护**：保留必要技术专有名词（如 JIT, QEMU, TrollStore, LiveContainer, StikDebug, APK 等）；
+            - **开箱即用**：提供标准签名包与巨魔专属包。
+
+            ### 下载文件
+            - **标准安装包（自签/AltStore/牛蛙助手等）**：[Husk_2.0_zh-Hans.ipa](https://github.com/yundian233/Husk-zh/releases/download/v2.0.0-zh/Husk_2.0_zh-Hans.ipa)
+            - **TrollStore 巨魔商店专属包**：[Husk_2.0_zh-Hans.tipa](https://github.com/yundian233/Husk-zh/releases/download/v2.0.0-zh/Husk_2.0_zh-Hans.tipa)
+          files: |
+            dist/Husk_2.0_zh-Hans.ipa
+            dist/Husk_2.0_zh-Hans.tipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
