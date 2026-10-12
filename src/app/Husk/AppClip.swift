@@ -60,7 +60,7 @@ enum AppClip {
             "PayloadIdentifier": "app.husk.clip.\(safe(app.id))",
             "PayloadUUID": outer,
             "PayloadDisplayName": "\(app.label) (Husk)",
-            "PayloadDescription": "Puts \(app.label) on your Home Screen. It opens in Husk.",
+            "PayloadDescription": "将 \(app.label) 添加到你的主屏幕。点击后将在 Husk 中打开。",
             "PayloadOrganization": "Husk",
             "PayloadRemovalDisallowed": false,
             "PayloadContent": [payload],

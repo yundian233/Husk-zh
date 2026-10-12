@@ -26,12 +26,12 @@ struct FAQTab: View {
                     }
                 }
                 if sections.isEmpty {
-                    Text("Nothing matches “\(query)”. Open Settings › About › Open Console to see what Husk is doing.")
+                    Text("未找到与“\(query)”匹配的问题。可打开“设置 › 关于 › 打开控制台”查看 Husk 正在运行的内容。")
                         .foregroundStyle(.secondary)
                 }
             }
-            .navigationTitle("FAQ")
-            .searchable(text: $query, prompt: "Search problems")
+            .navigationTitle("常见问题")
+            .searchable(text: $query, prompt: "搜索问题")
         }
     }
 }
@@ -59,96 +59,94 @@ enum FAQ {
     struct Section: Identifiable { let title: String; let symbol: String; let items: [Item]; var id: String { title } }
 
     static let sections: [Section] = [
-        Section(title: "JIT", symbol: "bolt.fill", items: [
-            Item(question: "What is JIT, and why does Husk need it?",
-                 answer: "Android apps and games are compiled while they run, which needs memory that can be written and then run. "
-                       + "iOS only allows that while a debugger is attached to the app. Turning on JIT attaches one for a moment. "
-                       + "Without it, Husk can show your library but cannot start Android or a game."),
-            Item(question: "Which way of turning on JIT should I use?",
-                 answer: "• **iOS 27 or later:** Settings › JIT › Pair on this iPhone. No computer needed.\n"
-                       + "• **iOS 26:** StikJIT (built in) with a pairing file made on a computer, plus LocalDevVPN.\n"
-                       + "• **Older iOS, or Husk inside LiveContainer:** the StikDebug app.\n"
-                       + "• **Installed with TrollStore:** TrollStore, with its URL Scheme setting on.\n"
-                       + "• **Jailbroken with Dopamine:** turn on JIT for apps in the jailbreak's settings."),
-            Item(question: "StikJIT says it cannot connect, or Enable JIT fails",
-                 answer: "1. Make sure **LocalDevVPN** is installed and connected. The VPN icon should be in the status bar.\n"
-                       + "2. Wi-Fi must be on, even though nothing leaves your iPhone.\n"
-                       + "3. **Developer Mode** must be on (Settings › Privacy & Security › Developer Mode).\n"
-                       + "4. The first time, Husk downloads Apple's Developer Disk Image, which can take a minute. Let it finish.\n"
-                       + "5. Still failing? Toggle LocalDevVPN off and on, then pair again."),
-            Item(question: "“Pair with Husk” does not appear in Developer Mode",
-                 answer: "Tap **Start pairing** in Husk first and allow **Local Network** access when asked. If you said no earlier, "
-                       + "turn it on in Settings › Privacy & Security › Local Network › Husk. Wi-Fi has to be on. "
-                       + "Developer Mode must already be enabled, which restarts the iPhone the first time."),
-            Item(question: "My pairing file stopped working",
-                 answer: "Pairing files stop working when the iPhone's trust settings are reset, and sometimes after an iOS update. "
-                       + "Make a new one, or pair on the iPhone itself if you are on iOS 27, then import it again in Settings › JIT."),
-            Item(question: "StikDebug opens but JIT stays off",
-                 answer: "Open StikDebug on its own and check that it has your pairing file and that LocalDevVPN is connected. "
-                       + "Update StikDebug to the latest release. Husk sends StikDebug its script itself, so nothing needs setting up for Husk inside StikDebug."),
-            Item(question: "Why do I have to turn JIT on again?",
-                 answer: "JIT lasts as long as Husk is running. When iOS closes Husk in the background, or you swipe it away, "
-                       + "the next launch needs JIT again. With Pair on this iPhone or a pairing file it is one tap."),
-            Item(question: "Can I use Husk without JIT?",
-                 answer: "You can browse and import apps, but nothing Android can run. Every game and app needs JIT."),
+        Section(title: "JIT 即时编译", symbol: "bolt.fill", items: [
+            Item(question: "什么是 JIT，为什么 Husk 必须需要它？",
+                 answer: "Android 应用和游戏在运行时需要即时编译代码，这要求内存具备可写且可执行权限。"
+                       + "iOS 仅在有调试器附加到应用时才允许此权限。开启 JIT 即为瞬间挂载调试器。"
+                       + "若没有 JIT，Husk 可以正常浏览应用库，但无法启动 Android 虚拟机或运行游戏。"),
+            Item(question: "我应该选用哪种方式开启 JIT？",
+                 answer: "• **iOS 27 或更高版本：** 设置 › JIT › 在本机配对。无需电脑。\n"
+                       + "• **iOS 26：** 内置 StikJIT（使用电脑生成的配对文件）+ LocalDevVPN。\n"
+                       + "• **旧版 iOS 或 LiveContainer 内的 Husk：** 使用 StikDebug 应用。\n"
+                       + "• **使用 TrollStore 安装：** 在 TrollStore 中开启 URL Scheme 设置直接激活。\n"
+                       + "• **Dopamine 等越狱设备：** 在越狱设置中直接开启 App 的 JIT 选项。"),
+            Item(question: "StikJIT 提示无法连接，或启用 JIT 失败怎么办？",
+                 answer: "1. 确保已安装并连接 **LocalDevVPN**（状态栏应显示 VPN 图标）。\n"
+                       + "2. 手机 Wi-Fi 必须保持开启状态（即使数据不出本机）。\n"
+                       + "3. 必须已启用 **开发者模式**（系统设置 › 隐私与安全性 › 开发者模式）。\n"
+                       + "4. 首次使用时 Husk 会下载 Apple 开发者磁盘映像 (DDI)，需要约 1 分钟，请耐心等待完成。\n"
+                       + "5. 仍失败时，可开关一次 LocalDevVPN 并重新配对。"),
+            Item(question: "开发者模式中没有出现“与 Husk 配对”选项？",
+                 answer: "请先在 Husk 中点击 **开始配对**，并在弹窗询问时允许 **本地网络** 权限。"
+                       + "如果之前误点了拒绝，请在系统设置 › 隐私与安全性 › 本地网络 › Husk 中重新打开。同时确保 Wi-Fi 开启且开发者模式已就绪。"),
+            Item(question: "我的配对文件失效了？",
+                 answer: "当重置了 iPhone 的信任设置或进行 iOS 系统更新后，配对文件可能会失效。"
+                       + "重新制作一份新配对文件，或者在“设置 › JIT”中重新导入即可。"),
+            Item(question: "打开了 StikDebug，但 JIT 依然显示未开启？",
+                 answer: "单独打开 StikDebug 检查是否已导入配对文件且 LocalDevVPN 是否已连接。"
+                       + "建议将 StikDebug 更新到最新版本。Husk 会自动向 StikDebug 发送脚本，无需手动配置。"),
+            Item(question: "为什么每次启动都需要重新开启 JIT？",
+                 answer: "JIT 权限与 Husk 进程的生命周期一致。当 iOS 在后台杀死 Husk 或手动上滑退出应用后，"
+                       + "下次打开都需要重新激活 JIT。通过本机配对或配对文件，仅需一键轻点即可完成。"),
+            Item(question: "可以在没有 JIT 的情况下使用 Husk 吗？",
+                 answer: "可以浏览和导入应用文件，但无法运行任何 Android 内容。所有游戏与应用运行均必须依赖 JIT。"),
         ]),
-        Section(title: "Husk Itself", symbol: "app.badge", items: [
-            Item(question: "Husk will not open at all",
-                 answer: "• **Opens and closes instantly:** the signing certificate has probably expired. Free Apple accounts last 7 days. "
-                       + "Re-sign or reinstall Husk with your sideloader; your apps and saves stay.\n"
-                       + "• **“Untrusted Developer”:** go to Settings › General › VPN & Device Management and trust your certificate.\n"
-                       + "• **Asks for Developer Mode:** turn it on in Settings › Privacy & Security."),
-            Item(question: "Husk closed while I was playing",
-                 answer: "When Husk opens again it shows what happened, with a report you can share. Usually the game ran out of memory "
-                       + "or hit something Husk does not support yet. Close other apps, and share the report if it keeps happening."),
-            Item(question: "How do I get logs to report a problem?",
-                 answer: "Open the app's page in your Library and tap **Share Report**. For Husk's own log, go to "
-                       + "Settings › About › **Open Console**. Turning on **Developer Info** there adds more detail."),
-            Item(question: "How do I update Husk?",
-                 answer: "Husk tells you when a new version is out. Install the new IPA over the old one with the same sideloader. "
-                       + "Your library, apps and saves are kept."),
+        Section(title: "Husk 应用本身", symbol: "app.badge", items: [
+            Item(question: "Husk 完全打不开或闪退？",
+                 answer: "• **打开后立即闪退：** 签名证书可能已过期（免费个人证书通常为 7 天）。请使用自签工具重新签名安装，已导入的应用和存档会被完整保留。\n"
+                       + "• **提示“不受信任的开发者”：** 前往系统设置 › 通用 › VPN 与设备管理，信任对应的证书即可。\n"
+                       + "• **提示需要开发者模式：** 前往系统设置 › 隐私与安全性，开启“开发者模式”并按提示重启手机。"),
+            Item(question: "玩游戏时 Husk 突然闪退关闭了？",
+                 answer: "再次打开 Husk 时会弹出崩溃诊断说明，并提供可分享的诊断报告。通常是因为设备运行内存不足 (RAM OOM) "
+                       + "或触及了转译层尚未支持的特性。建议清理后台多余应用后再试，若持续发生可分享崩溃报告。"),
+            Item(question: "如何获取日志以反馈问题？",
+                 answer: "在应用库中打开该应用的详情页，点击 **分享报告**。如需查看 Husk 自身日志，请前往 "
+                       + "设置 › 关于 › **打开控制台**。在其中开启 **开发者信息** 可查看更详尽的技术追踪。"),
+            Item(question: "如何更新 Husk？",
+                 answer: "当发布新版时 Husk 会在主页提醒。使用同一自签工具直接将新版 IPA 覆盖安装即可，"
+                       + "你的应用库、游戏及存档数据均会完整保留。"),
         ]),
-        Section(title: "Apps and Games", symbol: "gamecontroller.fill", items: [
-            Item(question: "An app will not open",
-                 answer: "Open its page in the Library. Husk says why it stopped:\n"
-                       + "• **Protected app:** it checks that it is on a real Android phone, or uses anti-cheat or DRM. Husk does not get around these.\n"
-                       + "• **Wrong kind of CPU code:** the APK only has 32-bit code. Find an arm64 (arm64-v8a) version.\n"
-                       + "• **Incomplete app or missing game data:** the APK needs its split files or an OBB. Import the full .apks, .xapk or .apkm.\n"
-                       + "• **Needs Google:** the app requires a Google account or Play services Husk cannot provide.\n"
-                       + "• **Uses something Husk does not have yet:** share the report so it can be added."),
-            Item(question: "The screen stays black",
-                 answer: "The first launch of a big game prepares its code and data, and can take up to a minute. "
-                       + "If it is still black after that, close it, open it once more and share the report if nothing changes."),
-            Item(question: "A modded or repacked APK crashes",
-                 answer: "Repacks from sites like APKVISION often turn the app's code into their own library or add tamper checks, "
-                       + "and these break more often. Try the original APK from the developer or from APKMirror."),
-            Item(question: "Which files can I import?",
-                 answer: ".apk, and split bundles as .apks, .xapk or .apkm. Share them to Husk, open them from Files, or tap + in the Library."),
-            Item(question: "A game runs slowly or the phone gets hot",
-                 answer: "Close other apps and let the phone cool. Games run natively, but some do work on the CPU that a real Android phone does on hardware. "
-                       + "Low Power Mode slows Husk down too."),
-            Item(question: "Can I use a controller?",
-                 answer: "Yes. Connect it to your iPhone in Bluetooth settings, and games that support controllers see it."),
-            Item(question: "Can I use Husk while a game runs?",
-                 answer: "Turn on **Open Apps in Windows** in Settings. Apps then open in a window you can move, resize and minimise."),
-            Item(question: "Sign-in with Google does not work",
-                 answer: "Husk has no Google Play services, so “Sign in with Google” buttons can fail. Use email or another sign-in if the app offers one."),
+        Section(title: "应用与游戏运行", symbol: "gamecontroller.fill", items: [
+            Item(question: "某个应用打不开？",
+                 answer: "在应用库中打开其详情页，Husk 会显示无法启动的具体原因：\n"
+                       + "• **受保护应用：** 应用检测了真实真机环境、反作弊或加固保护。Husk 暂无法绕过此类检测。\n"
+                       + "• **CPU 架构不匹配：** 该 APK 仅包含 32 位代码。请寻找 arm64 (arm64-v8a) 架构的版本。\n"
+                       + "• **应用不完整或缺少数据包：** 需要分卷 split APK 或 OBB 数据包。请导入完整的 .apks、.xapk 或 .apkm 文件。\n"
+                       + "• **依赖 Google 服务：** 该应用强依赖 Google 账号或 Play 服务。\n"
+                       + "• **遇到了 Husk 暂未支持的接口：** 请点击分享报告以便后续适配完善。"),
+            Item(question: "启动游戏后一直黑屏？",
+                 answer: "大型游戏首次启动时需要编译代码并解压资源，可能需要最多 1 分钟左右。"
+                       + "若超过 1 分钟仍黑屏，请退出后重新尝试一次；若仍无效可查看崩溃报告。"),
+            Item(question: "修改版/破解版 APK 闪退？",
+                 answer: "部分修改版 APK 会打包自身的防篡改检测库，这类修改更容易引起兼容性崩溃。"
+                       + "建议使用来自官方或 APKMirror 的原版 APK。"),
+            Item(question: "支持导入哪些格式？",
+                 answer: "支持 .apk，以及分卷安装包 .apks、.xapk、.apkm。可直接通过系统“分享”发送到 Husk，或从“文件”标签页及应用库的“+”号导入。"),
+            Item(question: "游戏运行卡顿或手机发热？",
+                 answer: "请关闭后台其他占用资源的应用。虽然游戏为原生转译运行，但部分计算由 CPU 模拟执行，负载较高。"
+                       + "开启“低电量模式”也会限制性能，建议关闭低电量模式。"),
+            Item(question: "支持外接游戏手柄吗？",
+                 answer: "支持。在 iPhone 系统蓝牙设置中配对连接手柄后，支持手柄控制的游戏会自动识别。"),
+            Item(question: "可以在游戏运行时继续使用 Husk 吗？",
+                 answer: "在“设置”中开启 **在窗口中打开应用** 即可。游戏将以悬浮窗口呈现，可任意移动、缩放和最小化。"),
+            Item(question: "无法使用 Google 账号登录？",
+                 answer: "Husk 目前未内置完整的 Google Play 服务框架，点击“Sign in with Google”可能会失败。建议使用邮箱或其他账号方式登录。"),
         ]),
-        Section(title: "Saves and Storage", symbol: "externaldrive.fill", items: [
-            Item(question: "Where are my saves?",
-                 answer: "Each app keeps its data inside Husk. On an app's page, **Back Up Saves** exports them and **Restore Saves** brings them back, "
-                       + "including onto another iPhone."),
-            Item(question: "Husk is using a lot of storage",
-                 answer: "Imported apps and their data live in Husk's folder. Remove games you no longer play from their page. "
-                       + "The full Android system download is about 2 GB more and is only needed for Android itself."),
+        Section(title: "存档与存储空间", symbol: "externaldrive.fill", items: [
+            Item(question: "我的游戏存档保存在哪里？",
+                 answer: "每个应用的数据都保存在 Husk 内部。在游戏页面中，点击 **备份游戏存档** 可导出为 .zip 文件，"
+                       + "点击 **恢复游戏存档** 即可还原，也可导入到其他 iPhone 上继续游玩。"),
+            Item(question: "Husk 占用了大量手机空间？",
+                 answer: "导入的应用和生成的数据都在 Husk 目录下。对于不再游玩的游戏，可在其详情页中将其删除。"
+                       + "完整的 Android 系统镜像约额外占用 2 GB 存储。"),
         ]),
-        Section(title: "Android", symbol: "cpu", items: [
-            Item(question: "What is the difference between apps and Android?",
-                 answer: "Most apps and games run directly on your iPhone, the way native apps do. The full Android system is a separate, "
-                       + "slower option for anything that only runs inside real Android."),
-            Item(question: "Android takes a long time to start",
-                 answer: "The first start downloads the Android image and boots it from cold, which takes a few minutes. "
-                       + "After that Husk restores a saved machine, which is much faster."),
+        Section(title: "Android 虚拟机", symbol: "cpu", items: [
+            Item(question: "“转译层应用”与“Android 虚拟机”有何区别？",
+                 answer: "绝大多数游戏通过转译层（Translation Layer）直接在 iPhone 上高速原生运行。"
+                       + "完整的 Android 系统则是虚拟出来的系统环境，运行速度较慢，主要用于转译层无法直接支持的应用（如 Termux 等）。"),
+            Item(question: "Android 虚拟机启动很慢？",
+                 answer: "首次启动需要解压镜像并冷启动，耗时数分钟。"
+                       + "之后 Husk 会自动恢复快照，启动速度仅需数秒。"),
         ]),
     ]
 }

@@ -46,10 +46,10 @@ final class CompatibilityStore: ObservableObject {
         case works, opens, broken, protected
         var label: String {
             switch self {
-            case .works: return "Works"
-            case .opens: return "Opens"
-            case .broken: return "Doesn\u{2019}t Work"
-            case .protected: return "Protected"
+            case .works: return "运行完美"
+            case .opens: return "仅可打开"
+            case .broken: return "无法运行"
+            case .protected: return "受保护/无法绕过"
             }
         }
         var symbol: String {
@@ -70,10 +70,10 @@ final class CompatibilityStore: ObservableObject {
         }
         var explanation: String {
             switch self {
-            case .works: return "Runs and plays or works normally."
-            case .opens: return "Starts and shows its screens, but has not been fully tested or has problems."
-            case .broken: return "Crashes or closes while starting."
-            case .protected: return "Refuses to run outside a real Android phone (anti-cheat, anti-tamper or DRM). Husk does not get around that."
+            case .works: return "运行流畅，可正常游玩或使用。"
+            case .opens: return "可启动并显示画面，但存在部分异常或未完整测试。"
+            case .broken: return "启动阶段即闪退或崩溃。"
+            case .protected: return "检测到非真实真机环境（反作弊、加固或 DRM 保护）。Husk 暂无法绕过。"
             }
         }
     }
@@ -177,7 +177,7 @@ final class CompatibilityStore: ObservableObject {
         }
         guard (200..<300).contains(http.statusCode) else {
             let message = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"] as? String
-            throw NSError(domain: "Compatibility", code: 1, userInfo: [NSLocalizedDescriptionKey: message ?? "The compatibility list could not be reached."])
+            throw NSError(domain: "Compatibility", code: 1, userInfo: [NSLocalizedDescriptionKey: message ?? "无法连接到兼容性列表服务器。"])
         }
         HuskLog.log("compat", "reported \(package): \(status.rawValue)")
         markAsked(package)
@@ -229,18 +229,18 @@ struct CompatibilitySection: View {
                 }
                 .padding(.vertical, 2)
                 if entry.community.reports > 0 {
-                    LabeledContent("Player Reports", value: "\(entry.community.reports)")
+                    LabeledContent("玩家测试报告", value: "\(entry.community.reports)")
                 }
             } else {
-                Text("Not on the list yet. Be the first to say how it runs.")
+                Text("尚未收录此应用。欢迎成为首位提交测试报告的玩家。")
                     .font(.footnote).foregroundStyle(.secondary)
             }
-            Button { reporting = subject } label: { Label("Report How It Ran", systemImage: "square.and.pencil") }
-            Link(destination: compat.pageURL(subject.package)) { Label("Open on antiweb.lol", systemImage: "safari") }
+            Button { reporting = subject } label: { Label("提交运行体验报告", systemImage: "square.and.pencil") }
+            Link(destination: compat.pageURL(subject.package)) { Label("在 antiweb.lol 上查看", systemImage: "safari") }
         } header: {
-            Text("Compatibility")
+            Text("兼容性")
         } footer: {
-            if entry?.official != nil { Text("Tested by the Husk team on an iPhone.") }
+            if entry?.official != nil { Text("由 Husk 团队在 iPhone 实机上完成官方测试。") }
         }
     }
 }
@@ -263,7 +263,7 @@ struct CompatReportSheet: View {
                     ForEach([CompatibilityStore.Status.works, .opens, .broken], id: \.self) { s in
                         Button { status = s } label: {
                             HStack {
-                                Label(s == .opens ? "Opens, but Has Problems" : s.label, systemImage: s.symbol)
+                                Label(s == .opens ? "可启动，但存在问题" : s.label, systemImage: s.symbol)
                                     .foregroundStyle(.primary)
                                 Spacer()
                                 if status == s { Image(systemName: "checkmark").foregroundStyle(.tint) }
@@ -271,37 +271,37 @@ struct CompatReportSheet: View {
                         }
                     }
                 } header: {
-                    Text(subject.afterPlaying ? "How did \(subject.name) run?" : "How does \(subject.name) run?")
+                    Text(subject.afterPlaying ? "\(subject.name) 刚刚运行体验如何？" : "\(subject.name) 运行体验如何？")
                 }
-                Section("Notes") {
-                    TextField("What worked, what didn\u{2019}t, how far you got", text: $notes, axis: .vertical)
+                Section("详细说明") {
+                    TextField("可正常运行的部分、遇到的问题或游玩进度", text: $notes, axis: .vertical)
                         .lineLimit(3...8)
                 }
                 Section {
-                    TextField("Anonymous", text: $author)
+                    TextField("匿名", text: $author)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 } header: {
-                    Text("Your Name")
+                    Text("你的昵称")
                 } footer: {
-                    Text("Sent with it: \(CompatibilityStore.device), iOS \(UIDevice.current.systemVersion), Husk build \(CompatibilityStore.build), JIT from \(CompatibilityStore.jitMethod). It shows on antiweb.lol for everyone.")
+                    Text("附带提交的信息包括：\(CompatibilityStore.device)、iOS \(UIDevice.current.systemVersion)、Husk 构建号 \(CompatibilityStore.build) 以及 JIT 方式 \(CompatibilityStore.jitMethod)。测试记录将在 antiweb.lol 公开展示。")
                 }
                 if let error {
                     Section { Text(error).foregroundStyle(.red) }
                 }
             }
-            .navigationTitle(sent ? "Thanks!" : "Report")
+            .navigationTitle(sent ? "感谢反馈！" : "提交兼容性报告")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(subject.afterPlaying ? "Not Now" : "Cancel") {
+                    Button(subject.afterPlaying ? "稍后再说" : "取消") {
                         if subject.afterPlaying { CompatibilityStore.shared.markAsked(subject.package) }
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     if sending { ProgressView() } else {
-                        Button("Send") { send() }.disabled(status == nil)
+                        Button("提交发送") { send() }.disabled(status == nil)
                     }
                 }
             }

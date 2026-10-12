@@ -1,0 +1,109 @@
+name: Build Husk iOS (Chinese zh-Hans)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Rust & Apple iOS Target
+        run: |
+          rustup target add aarch64-apple-ios
+
+      - name: Install xcodegen
+        run: |
+          brew install xcodegen
+
+      - name: Download official upstream release
+        run: |
+          mkdir -p /tmp/upstream
+          curl -fL --retry 3 -o /tmp/upstream/Husk.ipa https://github.com/Leviidev/Husk/releases/download/2.0/Husk.ipa
+          unzip -q /tmp/upstream/Husk.ipa -d /tmp/upstream/unpacked
+
+      - name: Stage prebuilt frameworks and libraries
+        run: |
+          mkdir -p build/ios-arm64/lib build/ios-arm64/sysroot/lib src/app/Frameworks
+          
+          # Stage dylibs for Xcode linking
+          cp /tmp/upstream/unpacked/Payload/Husk.app/Frameworks/libqemu-aarch64-softmmu.dylib build/ios-arm64/lib/
+          cp /tmp/upstream/unpacked/Payload/Husk.app/Frameworks/libANGLE-shared.dylib build/ios-arm64/sysroot/lib/
+          cp /tmp/upstream/unpacked/Payload/Husk.app/Frameworks/libFilePickerFix.dylib src/app/Frameworks/
+          
+          # If MoltenVK exists in official build, stage it
+          if [ -d /tmp/upstream/unpacked/Payload/Husk.app/Frameworks/MoltenVK.framework ]; then
+            mkdir -p build/ios-arm64/lib/MoltenVK.xcframework/ios-arm64
+            cp -R /tmp/upstream/unpacked/Payload/Husk.app/Frameworks/MoltenVK.framework build/ios-arm64/lib/MoltenVK.xcframework/ios-arm64/
+          fi
+          
+          # Build on-device pairing Rust library
+          chmod +x scripts/*.sh
+          ./scripts/build_rppairing_ios.sh
+
+      - name: Generate Xcode project
+        run: |
+          cd src/app
+          xcodegen generate
+
+      - name: Build Xcode Project
+        run: |
+          cd src/app
+          xcodebuild -project Husk.xcodeproj -scheme Husk \
+            -sdk iphoneos -configuration Release -derivedDataPath build_derived \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package Chinese IPA & TrollStore TIPA
+        run: |
+          mkdir -p dist/Payload
+          # Base bundle structure from upstream release
+          cp -R /tmp/upstream/unpacked/Payload/Husk.app dist/Payload/
+          
+          # Replace with newly compiled translated Husk binary
+          BUILT_APP="src/app/build_derived/Build/Products/Release-iphoneos/Husk.app"
+          cp -f "$BUILT_APP/Husk" dist/Payload/Husk.app/Husk
+          
+          # Replace PlugIns if freshly built
+          if [ -d "$BUILT_APP/PlugIns" ]; then
+            cp -Rf "$BUILT_APP/PlugIns/"* dist/Payload/Husk.app/PlugIns/ 2>/dev/null || true
+          fi
+          
+          # Copy zh-Hans localization resources
+          mkdir -p dist/Payload/Husk.app/zh-Hans.lproj
+          cp -f src/app/Husk/zh-Hans.lproj/* dist/Payload/Husk.app/zh-Hans.lproj/
+          
+          # Stamp commit
+          COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "zh-Hans")
+          plutil -replace HuskBuildCommit -string "$COMMIT" dist/Payload/Husk.app/Info.plist 2>/dev/null || true
+          plutil -replace HuskBuildDate -string "$(date -u '+%Y-%m-%d %H:%M UTC')" dist/Payload/Husk.app/Info.plist 2>/dev/null || true
+          
+          # Sign ad-hoc with entitlements
+          ENT="src/app/Husk/Husk.entitlements"
+          sign() { codesign --force --sign - --timestamp=none "$@"; }
+          find "dist/Payload/Husk.app" -name "*.dylib" -not -path "*/Frameworks/*.framework/*" | while read -r f; do sign "$f" || true; done
+          for fw in dist/Payload/Husk.app/Frameworks/*.framework; do [ -d "$fw" ] && sign "$fw" || true; done
+          for ex in dist/Payload/Husk.app/PlugIns/*.appex; do [ -d "$ex" ] && sign "$ex" || true; done
+          sign --entitlements "$ENT" "dist/Payload/Husk.app" || true
+          
+          # Zip standard IPA
+          cd dist
+          zip -qry Husk_2.0_zh-Hans.ipa Payload
+          
+          # Create TrollStore TIPA
+          cp Husk_2.0_zh-Hans.ipa Husk_2.0_zh-Hans.tipa
+          cd ..
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Husk-iOS-Chinese
+          path: |
+            dist/Husk_2.0_zh-Hans.ipa
+            dist/Husk_2.0_zh-Hans.tipa

@@ -49,26 +49,24 @@ struct AppDiagnosis: Identifiable, Equatable {
     static func preflight(_ app: TLApp) -> AppDiagnosis? {
         guard let r = app.report else { return nil }
         if !r.ok || r.verdict == "unreadable" {
-            return AppDiagnosis(kind: .badAPK, title: "Bad APK",
-                                detail: "This file is not an app Husk can read" + (r.error.map { ": \($0)." } ?? ".")
-                                    + " It may be damaged, only partly downloaded, or not an Android app at all.",
+            return AppDiagnosis(kind: .badAPK, title: "APK 文件损坏或不受支持",
+                                detail: "Husk 无法读取该应用文件" + (r.error.map { ": \($0)。" } ?? "。")
+                                    + " 文件可能已损坏、未完全下载，或者并非标准的 Android 应用安装包。",
                                 evidence: r.error ?? r.summary)
         }
         if r.verdict == "noArm64" {
-            return AppDiagnosis(kind: .unsupportedCPU, title: "Not supported: wrong kind of CPU code",
-                                detail: r.summary + " iPhones run 64-bit ARM (arm64) code. Look for an arm64 or universal build of this app.",
-                                evidence: "ABIs: " + r.abis.joined(separator: ", "))
+            return AppDiagnosis(kind: .unsupportedCPU, title: "不支持：CPU 架构不匹配",
+                                detail: r.summary + " iPhone 仅支持 64 位 ARM (arm64) 架构指令。请寻找该应用的 arm64 或通用构建版本。",
+                                evidence: "支持架构: " + r.abis.joined(separator: ", "))
         }
         if app.apks.count == 1, let base = app.apks.first, husk_apk_split_required(base) != 0 {
-            return AppDiagnosis(kind: .missingSplits, title: "Incomplete app",
-                                detail: "This app is published in several pieces (split APKs) and only its base was imported, so its libraries or "
-                                    + "resources are missing. Import the whole bundle (.apks, .xapk or .apkm), or get it from Husk's store.",
-                                evidence: "manifest: split APKs required")
+            return AppDiagnosis(kind: .missingSplits, title: "安装包不完整",
+                                detail: "该应用由多个拆分 APK 组成，当前仅导入了基础包 (base)，导致缺失原生库或资源文件。请导入完整安装包（.apks、.xapk 或 .apkm），或从 Husk 商店获取。",
+                                evidence: "manifest: 需要拆分 APK")
         }
         if let lib = r.libraries.first(where: { l in protectorLibraries.contains(where: { l.name.hasPrefix($0) }) }) {
-            return AppDiagnosis(kind: .protected, title: "Protected app",
-                                detail: "This app carries anti-tamper protection (\(lib.name)). Such protection checks that it runs on a certified "
-                                    + "Android phone and closes the app otherwise, so it may not start in Husk.",
+            return AppDiagnosis(kind: .protected, title: "受保护的应用",
+                                detail: "该应用包含反篡改/加壳保护（\(lib.name)）。此类机制会严格校验认证的 Android 设备环境并在未通过时闪退，可能无法在 Husk 中启动。",
                                 evidence: lib.name)
         }
         return nil
@@ -151,25 +149,22 @@ struct AppDiagnosis: Identifiable, Equatable {
         // An app that only works signed in to a Google account: it asked Android's account picker, got none, and closed
         if let l = lines.last(where: { $0.contains("ChooseTypeAndAccountActivity") || $0.contains("AccountManager.newChooseAccountIntent") }),
            lines.contains(where: { $0.contains("the app finished") }) {
-            return AppDiagnosis(kind: .needsGoogle, title: "Needs a Google account",
-                                detail: "This app only works signed in to a Google account. It asked Android to pick one, and Husk has no Google "
-                                    + "accounts to offer, so the app closed.",
+            return AppDiagnosis(kind: .needsGoogle, title: "需要 Google 账号",
+                                detail: "该应用必须登录 Google 账号方可使用。应用请求了 Android 账号选择器，但 Husk 暂无法提供 Google 账号服务，导致应用退出。",
                                 evidence: l)
         }
 
         // A game whose data comes as an expansion file the store did not install
         if let l = lines.first(where: { $0.contains("expansion file (OBB) is missing") }) {
-            return AppDiagnosis(kind: .missingSplits, title: "Missing game data",
-                                detail: "This game keeps most of its data in an expansion file (OBB) that the Play Store downloads separately "
-                                    + "from the app. Husk installed the app itself but not that file, so the game cannot load.",
+            return AppDiagnosis(kind: .missingSplits, title: "缺少游戏数据包 (OBB)",
+                                detail: "该游戏的主要数据存放在扩展数据包 (OBB) 中。Husk 仅安装了 APK 本体而缺少该数据包，导致游戏无法加载。",
                                 evidence: l)
         }
 
         // Video that only plays with DRM keys
         if let l = lines.first(where: { $0.contains("Husk cannot decrypt protected media") }) {
-            return AppDiagnosis(kind: .protected, title: "Protected video is not supported",
-                                detail: "The app's video is DRM-protected (Widevine), which only certified Android devices can decrypt. "
-                                    + "Unprotected video plays; protected video stays black.",
+            return AppDiagnosis(kind: .protected, title: "不支持受保护视频 (DRM)",
+                                detail: "该视频包含 DRM 加密保护 (Widevine)，仅认证的 Android 设备方可解密。普通无保护视频可正常播放，受保护视频将黑屏。",
                                 evidence: l)
         }
 
@@ -183,9 +178,8 @@ struct AppDiagnosis: Identifiable, Equatable {
     }
 
     private static func googleDiagnosis(_ line: String) -> AppDiagnosis {
-        AppDiagnosis(kind: .needsGoogle, title: "Needs Google Play services",
-                     detail: "This app relies on Google Play services (Google sign-in, Google's account and device checks) for more than Husk "
-                        + "can answer for. Apps that only use Google's libraries run; this one stops without the real services.",
+        AppDiagnosis(kind: .needsGoogle, title: "依赖 Google Play 服务",
+                     detail: "该应用严重依赖 Google Play 服务（Google 登录、账号与设备安全校验），转译层无法完整模拟。缺少真实服务导致应用退出。",
                      evidence: line)
     }
 
@@ -240,10 +234,10 @@ struct AppStoppedOverlay: View {
                 AppDiagnosisCard(diagnosis: diagnosis, showsEvidence: true)
                 HStack(spacing: 10) {
                     if let report {
-                        ShareLink(item: report) { Label("Share Report", systemImage: "square.and.arrow.up").frame(maxWidth: .infinity) }
+                        ShareLink(item: report) { Label("分享诊断报告", systemImage: "square.and.arrow.up").frame(maxWidth: .infinity) }
                             .buttonStyle(.bordered)
                     }
-                    Button(action: close) { Text("Close").frame(maxWidth: .infinity) }
+                    Button(action: close) { Text("关闭").frame(maxWidth: .infinity) }
                         .buttonStyle(.borderedProminent)
                 }
             }

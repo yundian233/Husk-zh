@@ -370,7 +370,7 @@ final class GuestImage: ObservableObject {
         if let why = check.problem {
             HuskLog.log("guest", "existing guest disk is INVALID (\(why)); removing it")
             try? FileManager.default.removeItem(atPath: diskPath)
-            state = .failed("The runtime on disk is not a valid image (\(why)). Tap to retry.")
+            state = .failed("磁盘上的运行时并非有效映像文件（\(why)）。轻点重试。")
         } else {
             HuskLog.log("guest", "guest disk present and valid: \(check.size ?? 0) bytes")
             state = .ready
@@ -561,9 +561,7 @@ final class GuestImage: ObservableObject {
                         if let want = self.manifest?.snapshot.sha256, want != joined.digest {
                             try? FileManager.default.removeItem(at: joined.url)
                             self.isFetchingSnapshot = false
-                            self.failed("The snapshot did not match the release "
-                                      + "(sha256 \(joined.digest.prefix(12)), expected "
-                                      + "\(want.prefix(12))).")
+                            self.failed("快照校验与发布版本不匹配 (sha256 \(joined.digest.prefix(12))，预期为 \(want.prefix(12)))。")
                             return
                         }
                         self.finishedSnapshot(tempURL: joined.url, digest: joined.digest)
@@ -608,7 +606,7 @@ final class GuestImage: ObservableObject {
                 try? FileManager.default.removeItem(at: dest)
                 try? FileManager.default.removeItem(atPath: self.snapshotStampPath)
                 DispatchQueue.main.async {
-                    self.state = .failed("Could not unpack the snapshot: \(error.localizedDescription)")
+                    self.state = .failed("无法解压虚拟机快照：\(error.localizedDescription)")
                 }
             }
         }
@@ -781,7 +779,7 @@ final class GuestImage: ObservableObject {
             try? FileManager.default.removeItem(at: tempURL)
             HuskLog.log("guest", "image rejected: sha256 \(got.prefix(12)) but the "
                                + "release says \(want.prefix(12))")
-            state = .failed("The downloaded image did not match the release. Tap to retry.")
+            state = .failed("下载的系统映像与发布版本校验不匹配。轻点重试。")
             return
         }
         // Validate BEFORE installing, so a bad download never becomes the thing
@@ -790,7 +788,7 @@ final class GuestImage: ObservableObject {
         if let why = check.problem {
             try? FileManager.default.removeItem(at: tempURL)
             HuskLog.log("guest", "downloaded file rejected: \(why)")
-            state = .failed("Download did not produce a disk image: \(why)")
+            state = .failed("下载的文件未能生成有效磁盘映像：\(why)")
             return
         }
         let size = check.size ?? 0

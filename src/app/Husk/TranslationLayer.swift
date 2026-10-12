@@ -97,15 +97,15 @@ extension TLReport {
         let flagged = libraries.filter { $0.abi == "arm64-v8a" && $0.status != "ok" }.count
         let total = libraries.filter { $0.abi == "arm64-v8a" }.count
         var text = nativeEngine == .flutter
-            ? "A Flutter app. Its engine and its compiled Dart run natively through Husk's translation layer, which loads its \(total) arm64 libraries itself."
+            ? "一款 Flutter 应用。其引擎和编译后的 Dart 代码直接通过 Husk 转译层原生运行，Husk 自行加载其 \(total) 个 arm64 动态库。"
             : nativeEngine == .java && engine != "libGDX"
-            ? "An Android app. Husk runs its code on its own Java runtime" + (total > 0 ? " and loads its \(total) arm64 libraries itself." : ".")
-            : "A \(nativeEngineName) game. It runs through Husk's native runtime, which loads its \(total) arm64 libraries itself."
-        if nativeEngine == .cocos || nativeEngine == .minecraft || nativeEngine == .ue4 || nativeEngine == .gta { text += " It is a landscape game: Husk turns the screen for it." }
-        else if nativeEngine == .sdl || nativeEngine == .nativeactivity || nativeEngine == .godot || nativeEngine == .gamemaker { text += " Husk turns the screen the way the game asks for." }
+            ? "一款 Android 应用。Husk 在独立的 Java 运行时中运行其代码" + (total > 0 ? "，并自行加载其 \(total) 个 arm64 动态库。" : "。")
+            : "一款 \(nativeEngineName) 游戏。它通过 Husk 原生运行时执行，由 Husk 自行加载其 \(total) 个 arm64 动态库。"
+        if nativeEngine == .cocos || nativeEngine == .minecraft || nativeEngine == .ue4 || nativeEngine == .gta { text += " 属于横屏游戏：Husk 会自动旋转屏幕适配。" }
+        else if nativeEngine == .sdl || nativeEngine == .nativeactivity || nativeEngine == .godot || nativeEngine == .gamemaker { text += " Husk 将按照游戏请求的方向自动旋转屏幕。" }
         if flagged > 0 {
-            text += " \(flagged) of them use tricks the older loader could not handle; the native runtime handles those too, "
-                  + "except for optional anti-tamper code, which it leaves out."
+            text += " 其中 \(flagged) 个库使用了旧版加载器无法处理的特殊机制；原生运行时均已支持，"
+                  + "仅忽略可选的反篡改保护代码。"
         }
         return text
     }
@@ -546,7 +546,7 @@ struct TLChecksView: View {
             progressSection
         }
         .huskForm()
-        .navigationTitle("Device Checks")
+        .navigationTitle("设备检查")
     }
 
     private var checksSection: some View {
@@ -568,32 +568,29 @@ struct TLChecksView: View {
             Button {
                 store.runChecks()
             } label: {
-                Label(store.checking ? "Checking…"
-                      : store.checks.isEmpty ? "Run checks" : "Run again",
+                Label(store.checking ? "正在检查…"
+                      : store.checks.isEmpty ? "运行检查" : "重新运行",
                       systemImage: "stethoscope")
             }
             .disabled(store.checking)
         } header: {
-            Text("This iPhone")
+            Text("设备环境")
         } footer: {
-            Text("Android's native code expects things of the processor and of memory "
-               + "that only the phone can answer -- above all, whether a library's code "
-               + "can run with its data writable right beside it. Enable JIT first, or "
-               + "the memory checks are skipped. The results go to the console too.")
+            Text("Android 原生代码对处理器和内存有特定要求，只有真机测试才能验证 — 特别是原生动态库的代码段是否与其可写数据段同页共存。请先开启 JIT，否则将跳过内存检查。检查结果将同步输出至控制台。")
         }
     }
 
     private var progressSection: some View {
         Section {
-            DetailRow(label: "App reports", value: "working", mono: false)
-            DetailRow(label: "Device checks", value: "working", mono: false)
-            DetailRow(label: "Library loader", value: "working", mono: false)
-            DetailRow(label: "Android runtime", value: "Unity, cocos2d-x, GameActivity, SDL3", mono: false)
-            DetailRow(label: "Opening apps", value: "Unity, cocos2d-x, Minecraft and SDL3 games", mono: false)
+            DetailRow(label: "应用报告", value: "正常运行", mono: false)
+            DetailRow(label: "设备检查", value: "正常运行", mono: false)
+            DetailRow(label: "动态库加载器", value: "正常运行", mono: false)
+            DetailRow(label: "Android 运行时", value: "Unity, cocos2d-x, GameActivity, SDL3", mono: false)
+            DetailRow(label: "启动应用", value: "Unity, cocos2d-x, Minecraft 和 SDL3 游戏", mono: false)
         } header: {
-            Text("Where it stands")
+            Text("转译层进度")
         } footer: {
-            Text("The plan, in order, is docs/04-translation-layer.md in Husk's source.")
+            Text("详细开发规划参见 Husk 源码中的 docs/04-translation-layer.md。")
         }
     }
 }
@@ -605,11 +602,11 @@ private struct TLCheckTag: View {
 
     var body: some View {
         switch status {
-        case "pass":    Tag(text: "Pass", tint: Theme.good)
-        case "fail":    Tag(text: "Fail", tint: .red)
-        case "warn":    Tag(text: "Partly", tint: .orange)
-        case "skip":    Tag(text: "Skipped")
-        default:        Tag(text: "Info", tint: Theme.accent)
+        case "pass":    Tag(text: "通过", tint: Theme.good)
+        case "fail":    Tag(text: "未通过", tint: .red)
+        case "warn":    Tag(text: "部分通过", tint: .orange)
+        case "skip":    Tag(text: "已跳过")
+        default:        Tag(text: "信息", tint: Theme.accent)
         }
     }
 }
@@ -631,12 +628,12 @@ final class TLAttemptRunner: ObservableObject {
     private var timer: Timer?
 
     var statusText: String {
-        if isRunning { return "Running Attempt..." }
-        guard let code = exitCode else { return "Ready" }
+        if isRunning { return "正在尝试运行…" }
+        guard let code = exitCode else { return "就绪" }
         switch code {
-        case 2:  return "Success: The guest drew frames!"
-        case 1:  return "Loaded: Native libraries loaded (no draw)"
-        default: return "Refused: Could not execute"
+        case 2:  return "成功：已正常渲染画面！"
+        case 1:  return "已加载：原生库已加载（但未绘制画面）"
+        default: return "已拒绝：无法执行"
         }
     }
 
@@ -652,12 +649,12 @@ final class TLAttemptRunner: ObservableObject {
 
     var subStatusText: String {
         if isRunning {
-            return "\(frameCount) frame(s) posted · driving lifecycle"
+            return "已提交 \(frameCount) 帧 · 正在调度生命周期"
         }
         if let code = exitCode {
-            return "Exit code \(code) · \(frameCount) frame(s) drawn"
+            return "退出代码 \(code) · 已绘制 \(frameCount) 帧"
         }
-        return "Not started"
+        return "未启动"
     }
 
     private var pollTicks: Int = 0
@@ -805,11 +802,11 @@ struct TLClassicAttemptView: View {
                     if !runner.isRunning, runner.frameCount == 0 {
                         VStack(spacing: 10) {
                             if runner.isDone {
-                                Text("The game stopped").font(.headline).foregroundStyle(.white)
-                                Button("Run Again") { runner.start(apks: app.apks) }.buttonStyle(.borderedProminent)
+                                Text("游戏已停止").font(.headline).foregroundStyle(.white)
+                                Button("再次运行") { runner.start(apks: app.apks) }.buttonStyle(.borderedProminent)
                             } else {
                                 ProgressView().tint(.white)
-                                Text("Starting \(app.label)…").font(.subheadline).foregroundStyle(.white.opacity(0.7))
+                                Text("正在启动 \(app.label)…").font(.subheadline).foregroundStyle(.white.opacity(0.7))
                             }
                         }
                     }
@@ -823,7 +820,7 @@ struct TLClassicAttemptView: View {
             if hint {
                 VStack {
                     Spacer()
-                    Text("Tap with three fingers to show the interface")
+                    Text("三指轻点以显示操作栏")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 14).padding(.vertical, 8)
@@ -855,7 +852,7 @@ struct TLClassicAttemptView: View {
     private var bar: some View {
         HStack(spacing: 12) {
             Button { runner.stop(); dismiss() } label: {
-                Label("Close", systemImage: "xmark").font(.system(size: 13, weight: .semibold))
+                Label("关闭", systemImage: "xmark").font(.system(size: 13, weight: .semibold))
             }
             .tint(.white)
             Circle().fill(runner.statusColor).frame(width: 7, height: 7)
@@ -864,12 +861,12 @@ struct TLClassicAttemptView: View {
             Spacer()
             if devInfo {
                 Button { withAnimation(.snappy(duration: 0.25)) { showLog.toggle() } } label: {
-                    Text(showLog ? "Hide log" : "Log").font(.system(size: 12, weight: .semibold))
+                    Text(showLog ? "隐藏日志" : "日志").font(.system(size: 12, weight: .semibold))
                 }
                 .tint(.white)
             }
             Button { toggleInterface() } label: {
-                Label("Hide", systemImage: "eye.slash").font(.system(size: 12, weight: .semibold))
+                Label("隐藏", systemImage: "eye.slash").font(.system(size: 12, weight: .semibold))
             }
             .tint(.white)
         }
@@ -881,7 +878,7 @@ struct TLClassicAttemptView: View {
     private var logPanel: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                Text(runner.logText.isEmpty ? "Starting…" : runner.logText)
+                Text(runner.logText.isEmpty ? "正在启动…" : runner.logText)
                     .font(.technical(10))
                     .foregroundStyle(.white.opacity(0.85))
                     .frame(maxWidth: .infinity, alignment: .leading)

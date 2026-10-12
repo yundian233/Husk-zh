@@ -15,26 +15,26 @@ enum WhatsNew {
     /// The version whose notes these are. A build of the same version shows nothing again.
     static let version = "1.0.1"
     static let items: [Item] = [
-        Item(symbol: "bag.fill", title: "Google Play",
-             detail: "Get games from the Store tab. Play Store downloads, with their split APKs and asset packs, run in the Translation Layer."),
-        Item(symbol: "checkmark.seal.fill", title: "Google Play services",
-             detail: "Games see Play services as present and signed out, so they stop asking for it and carry on."),
-        Item(symbol: "arrow.up.doc.fill", title: "Save backups",
-             detail: "Back up a game's saves to a .zip from its page, and restore them later or on another device."),
-        Item(symbol: "exclamationmark.bubble.fill", title: "Crash reports",
-             detail: "When a game takes Husk down, the next launch says what happened and gives you a report to share."),
-        Item(symbol: "checkmark.circle.fill", title: "Know what works",
-             detail: "The library marks each game with how it did last time: it plays, it crashed, or it did not start."),
-        Item(symbol: "gamecontroller.fill", title: "Godot games",
-             detail: "Games made with Godot 3 and 4 now run in the Translation Layer."),
-        Item(symbol: "slider.horizontal.below.square.and.square.filled", title: "Your own controls",
-             detail: "Move, resize and hide the on-screen controller's buttons, for each game."),
-        Item(symbol: "keyboard.fill", title: "Typing in Minecraft",
-             detail: "Chat, sign and world-name fields bring up the keyboard."),
-        Item(symbol: "arrow.left.arrow.right", title: "Switching games",
-             detail: "Close Husk to play another game, and it starts by itself when Husk opens."),
-        Item(symbol: "puzzlepiece.extension.fill", title: "Geode",
-             detail: "Mods for Geometry Dash, Geode 5 included, turned on from the game's settings."),
+        Item(symbol: "bag.fill", title: "Google Play 商店",
+             detail: "从“商店”标签获取游戏。从 Play 商店下载的内容（包含分卷 APK 与资源包）可在转译层中直接运行。"),
+        Item(symbol: "checkmark.seal.fill", title: "Google Play 服务",
+             detail: "游戏将识别 Play 服务为已存在且未登录状态，不再反复提示缺失并可直接继续运行。"),
+        Item(symbol: "arrow.up.doc.fill", title: "存档备份与还原",
+             detail: "在游戏详情页将存档备份为 .zip 文件，随时在当前或其它设备上快速还原。"),
+        Item(symbol: "exclamationmark.bubble.fill", title: "崩溃诊断报告",
+             detail: "当游戏异常退出导致 Husk 关闭时，下次启动将清晰说明原因并生成可供分享的诊断报告。"),
+        Item(symbol: "checkmark.circle.fill", title: "运行兼容状态指示",
+             detail: "媒体库将标明各游戏的上次运行体验：运行良好、发生崩溃或未能启动。"),
+        Item(symbol: "gamecontroller.fill", title: "支持 Godot 引擎",
+             detail: "基于 Godot 3 和 4 开发的游戏现已可在转译层中原生流畅运行。"),
+        Item(symbol: "slider.horizontal.below.square.and.square.filled", title: "自定义虚拟按键",
+             detail: "支持为每款游戏独立移动、缩放和隐藏屏幕虚拟触控按键。"),
+        Item(symbol: "keyboard.fill", title: "Minecraft 输入支持",
+             detail: "在 Minecraft 聊天框、告示牌及世界命名输入框中自动调出系统键盘。"),
+        Item(symbol: "arrow.left.arrow.right", title: "快速切换游戏",
+             detail: "退出 Husk 并切换到其它游戏时，打开 Husk 即可自动从上次退出的位置启动。"),
+        Item(symbol: "puzzlepiece.extension.fill", title: "Geode 模组加载器",
+             detail: "Geometry Dash 模组加载支持，内置 Geode 5，可在游戏专属设置中一键开启。"),
     ]
 
     private static let seenKey = "husk.whatsNew.seen"
@@ -58,8 +58,8 @@ struct WhatsNewSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 26) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("What's New in Husk \(WhatsNew.version)").font(.largeTitle.weight(.bold))
-                        Text("The first full release.").foregroundStyle(.secondary)
+                        Text("Husk \(WhatsNew.version) 新特性").font(.largeTitle.weight(.bold))
+                        Text("Husk 2.0 正式版更新内容。").foregroundStyle(.secondary)
                     }
                     .padding(.top, 36)
                     ForEach(WhatsNew.items) { item in
@@ -80,7 +80,7 @@ struct WhatsNewSheet: View {
                 .padding(.bottom, 20)
             }
             Button(action: done) {
-                Text("Continue").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 8)
+                Text("继续使用").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 8)
             }
             .buttonStyle(.borderedProminent)
             .padding(.horizontal, 28)

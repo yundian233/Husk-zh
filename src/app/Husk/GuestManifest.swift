@@ -115,8 +115,8 @@ enum GuestUpdate: Equatable {
     var title: String {
         switch self {
         case .none:     return ""
-        case .image:    return "A new Android image is available"
-        case .snapshot: return "A new pre-booted snapshot is available"
+        case .image:    return "有新的 Android 系统映像可用"
+        case .snapshot: return "有新的预引导虚拟机快照可用"
         }
     }
 
@@ -131,14 +131,9 @@ enum GuestUpdate: Equatable {
         let size = String(format: "%.1f GB", gb)
         switch self {
         case .image:
-            return "Downloading it replaces the Android system and its pre-booted "
-                 + "snapshot (\(size)), and with them everything inside Android — "
-                 + "installed apps included. A snapshot only restores against the "
-                 + "image it was saved on, so the two cannot be updated separately."
+            return "下载该更新将替换 Android 系统及其预引导快照（约 \(size)），同时会清除 Android 系统内保存的所有数据（包括已安装的应用）。由于快照仅与生成它的系统映像严格匹配，二者无法单独更新。"
         case .snapshot:
-            return "Without it Android boots from cold, which takes several "
-                 + "minutes. The download is \(size), and it replaces what is "
-                 + "inside Android now, including installed apps."
+            return "缺少快照时 Android 每次都需要冷启动，耗时数分钟。下载大小约 \(size)，更新后将替换 Android 当前内部数据（包括已安装的应用）。"
         case .none:
             return ""
         }

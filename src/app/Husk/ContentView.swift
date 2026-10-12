@@ -50,23 +50,23 @@ struct ContentView: View {
             // why it appears instantly rather than reloading.
             TabView(selection: $router.tab) {
                 HomeView()
-                    .tabItem { Label("Home", systemImage: "house.fill") }
+                    .tabItem { Label("首页", systemImage: "house.fill") }
                     .tag(HuskTab.home)
 
                 LibraryScreen()
-                    .tabItem { Label("Library", systemImage: "square.grid.2x2.fill") }
+                    .tabItem { Label("应用库", systemImage: "square.grid.2x2.fill") }
                     .tag(HuskTab.library)
 
                 StoreView()
-                    .tabItem { Label("Store", systemImage: "cart.fill") }
+                    .tabItem { Label("商店", systemImage: "cart.fill") }
                     .tag(HuskTab.store)
 
                 FAQTab()
-                    .tabItem { Label("FAQ", systemImage: "questionmark.circle.fill") }
+                    .tabItem { Label("常见问题", systemImage: "questionmark.circle.fill") }
                     .tag(HuskTab.help)
 
                 SettingsTab()
-                    .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+                    .tabItem { Label("设置", systemImage: "gearshape.fill") }
                     .tag(HuskTab.settings)
             }
             .opacity(showGuestScreen && started && runner.isRunning ? 0 : 1)
@@ -146,16 +146,16 @@ struct ContentView: View {
             WhatsNewSheet { WhatsNew.markSeen(); showWhatsNew = false }
         }
         // A newer Husk is on GitHub.
-        .alert("Husk \(updates.available?.version ?? "") Is Available", isPresented: Binding(
+        .alert("Husk \(updates.available?.version ?? "") 新版本可用", isPresented: Binding(
                 get: { updates.available != nil && !showOnboarding && !showWhatsNew && crash.pending == nil },
                 set: { if !$0 { updates.dismiss() } })) {
-            Button("View Release") {
+            Button("查看版本") {
                 if let page = updates.available?.page { UIApplication.shared.open(page) }
                 updates.dismiss()
             }
-            Button("Not Now", role: .cancel) { updates.dismiss() }
+            Button("稍后再说", role: .cancel) { updates.dismiss() }
         } message: {
-            Text("You have \(AppUpdates.current). The new version's IPA is on its release page.")
+            Text("当前版本为 \(AppUpdates.current)。新版本 IPA 安装包已在 Release 页面提供下载。")
         }
         .task { await updates.check() }
         .task { await CompatibilityStore.shared.refresh() }
@@ -163,13 +163,13 @@ struct ContentView: View {
         .sheet(isPresented: $router.showDownloads) { DownloadsTab() }
         // Pictures for the apps here: read the index on launch and whenever the set of apps changes.
         .task(id: showcasePackages) { showcase.refresh(for: showcasePackages) }
-        .alert("Metadata Updated", isPresented: Binding(get: { showcase.shouldAsk && !showOnboarding },
+        .alert("应用元数据已更新", isPresented: Binding(get: { showcase.shouldAsk && !showOnboarding },
                                                          set: { if !$0 { showcase.asked() } })) {
-            Button("Download") { showcase.downloadUpdates() }
-            Button("Not Now", role: .cancel) { showcase.asked() }
+            Button("下载") { showcase.downloadUpdates() }
+            Button("稍后再说", role: .cancel) { showcase.asked() }
         } message: {
             let n = showcase.updates.count
-            Text("Metadata for \(n) of your app\(n == 1 ? "" : "s") has been updated. Would you like to download the updates?")
+            Text("已更新 \(n) 款应用的元数据信息。是否立即下载更新？")
         }
         // An APK shared to Husk: where does it go?
         .sheet(isPresented: Binding(get: { !incoming.waiting.isEmpty },
@@ -197,8 +197,8 @@ struct ContentView: View {
         .alert(guest.update.title, isPresented: Binding(
                 get: { guest.update.isSomething },
                 set: { if !$0 { guest.dismissUpdate() } })) {
-            Button("Download") { guest.applyUpdate() }
-            Button("Not now", role: .cancel) { guest.dismissUpdate() }
+            Button("下载") { guest.applyUpdate() }
+            Button("稍后再说", role: .cancel) { guest.dismissUpdate() }
         } message: {
             Text(guest.update.detail)
         }
@@ -381,7 +381,7 @@ struct GuestScreenView: View {
                     ProgressView(value: Double(runner.bootProgress), total: 100)
                         .progressViewStyle(.linear)
                         .frame(width: 200)
-                    Text(runner.setupMessage ?? "Starting Android…")
+                    Text(runner.setupMessage ?? "正在启动 Android…")
                         .font(.caption2).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
@@ -430,7 +430,7 @@ struct GuestScreenView: View {
 
                         Menu {
                             Button { onBack() } label: {
-                                Label("Back to Husk", systemImage: "chevron.left")
+                                Label("返回 Husk", systemImage: "chevron.left")
                             }
                             // Android's own Home key, over the bridge. Three-button
                             // navigation is not drawn in this guest, so without it
@@ -441,7 +441,7 @@ struct GuestScreenView: View {
                                         "input keyevent KEYCODE_HOME", timeout: 20)
                                     HuskLog.log("ui", "sent HOME to Android")
                                 }
-                            } label: { Label("Home", systemImage: "house") }
+                            } label: { Label("主屏幕", systemImage: "house") }
                             // Android will not reshape its panel, so when an app
                             // asks for landscape it turns its own composition
                             // inside a portrait frame. This turns it back.
@@ -449,19 +449,19 @@ struct GuestScreenView: View {
                                 HuskGLView.rotated.toggle()
                                 rotated = HuskGLView.rotated
                             } label: {
-                                Label(rotated ? "Unrotate picture" : "Rotate picture",
+                                Label(rotated ? "恢复原始方向" : "旋转画面",
                                       systemImage: "rotate.right")
                             }
                             Divider()
                             Button {
                                 QemuRunner.shared.saveState(reason: "asked from full screen")
                             } label: {
-                                Label(runner.isSavingState ? "Saving…" : "Save Android",
+                                Label(runner.isSavingState ? "正在保存…" : "保存 Android 快照",
                                       systemImage: "externaldrive.badge.checkmark")
                             }
                             .disabled(runner.isSavingState)
                             Button { showLogs = true } label: {
-                                Label("Console", systemImage: "terminal")
+                                Label("控制台", systemImage: "terminal")
                             }
                         } label: {
                             Image(systemName: "ellipsis")
@@ -528,12 +528,12 @@ struct LogView: View {
                     }
                 }
             }
-            .navigationTitle("Logs")
+            .navigationTitle("日志")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     if isSheet {
-                        Button("Done") { dismiss() }
+                        Button("完成") { dismiss() }
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
@@ -589,7 +589,7 @@ struct ControlsSheet: View {
             Theme.backdrop
             VStack(spacing: 16) {
                 HStack {
-                    Text("Controls")
+                    Text("控制与输入")
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundStyle(Theme.text)
                     Spacer()
@@ -604,24 +604,23 @@ struct ControlsSheet: View {
                 }
 
                 RowGroup {
-                    row("hand.tap.fill", "Touch", on: true, available: true)
+                    row("hand.tap.fill", "触控", on: true, available: true)
                     RowDivider()
                     Button {
                         keyboard.toggle()
                         HuskLog.log("kbd", "keyboard \(keyboard ? "shown" : "hidden")")
                         dismiss()
                     } label: {
-                        row("keyboard", "Keyboard", on: keyboard, available: true)
+                        row("keyboard", "键盘", on: keyboard, available: true)
                     }
                     .buttonStyle(.plain)
                     RowDivider()
-                    row("gamecontroller", "Gamepad", on: false, available: false)
+                    row("gamecontroller", "手柄", on: false, available: false)
                     RowDivider()
-                    row("computermouse", "Mouse", on: false, available: false)
+                    row("computermouse", "鼠标指针", on: false, available: false)
                 }
 
-                Text("Touch always works. A gamepad and a pointer are not wired "
-                   + "through to Android yet.")
+                Text("触控已始终可用。手柄与鼠标指针向 Android 的映射正在开发中。")
                     .font(.system(size: 12))
                     .foregroundStyle(Theme.textDim)
                     .multilineTextAlignment(.center)
@@ -651,7 +650,7 @@ struct ControlsSheet: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Theme.accent)
             } else if !available {
-                Text("Not yet").font(.system(size: 12)).foregroundStyle(Theme.textDim)
+                Text("暂未支持").font(.system(size: 12)).foregroundStyle(Theme.textDim)
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 12)

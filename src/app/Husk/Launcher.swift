@@ -86,8 +86,8 @@ enum LibraryItem: Identifiable, Hashable {
         guard let date = lastUsed else { return nil }
         let rel = RelativeDateTimeFormatter()
         rel.unitsStyle = .full
-        let ago = date.timeIntervalSinceNow > -60 ? "just now" : rel.localizedString(for: date, relativeTo: Date())
-        return (isGame ? "Played " : "Opened ") + ago
+        let ago = date.timeIntervalSinceNow > -60 ? "刚刚" : rel.localizedString(for: date, relativeTo: Date())
+        return (isGame ? "上次运行于 " : "上次打开于 ") + ago
     }
 }
 
@@ -97,9 +97,9 @@ enum LibraryFilter: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .all: return "All"
-        case .games: return "Games"
-        case .apps: return "Apps"
+        case .all: return "全部"
+        case .games: return "游戏"
+        case .apps: return "应用"
         }
     }
 }
@@ -157,7 +157,7 @@ struct HomeView: View {
                         if holiday { ChristmasTree(size: 30).padding(.leading, 2) }
                         Spacer()
                         HeaderButton(systemImage: "plus") { router.addSomething() }
-                            .accessibilityLabel("Add a Game or App")
+                            .accessibilityLabel("添加游戏或应用")
                     }
                     .padding(.horizontal, 4)
                     .padding(.bottom, 6)
@@ -183,7 +183,7 @@ struct HomeView: View {
 
                     let rest = items.filter { $0 != lead }
                     if !rest.isEmpty {
-                        ShelfHeader(title: "Library") { router.showLibrary(.all) }
+                        ShelfHeader(title: "媒体库") { router.showLibrary(.all) }
                             .padding(.horizontal, 4)
                             .padding(.top, 6)
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
@@ -259,7 +259,7 @@ private struct LeadTile: View {
                                 .font(.headline)
                                 .foregroundStyle(.primary)
                                 .lineLimit(1)
-                            Text(item.usedText ?? (item.isGame ? "Ready to play" : "Ready to open"))
+                            Text(item.usedText ?? (item.isGame ? "随时可玩" : "随时可开启"))
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
@@ -277,7 +277,7 @@ private struct LeadTile: View {
                         .background(Color.accentColor, in: Circle())
                 }
                 .buttonStyle(CardButtonStyle())
-                .accessibilityLabel((item.isGame ? "Play " : "Open ") + item.title)
+                .accessibilityLabel((item.isGame ? "运行 " : "打开 ") + item.title)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
@@ -313,8 +313,8 @@ private struct JITTile: View {
                         if jit.busy { ProgressView() }
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(isOn ? "JIT on" : "JIT off").font(.headline).foregroundStyle(.primary)
-                        Text(isOn ? "via \(via)" : jit.busy ? (jit.status ?? "Turning on…") : "Tap to turn on")
+                        Text(isOn ? "JIT 已开启" : "JIT 未开启").font(.headline).foregroundStyle(.primary)
+                        Text(isOn ? "通过 \(via)" : jit.busy ? (jit.status ?? "开启中…") : "轻点开启")
                             .font(.footnote).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
@@ -344,12 +344,12 @@ private struct DownloadsTile: View {
             let total = running.reduce(Int64(0)) { $0 + $1.total }
             let got = running.reduce(Int64(0)) { $0 + $1.received }
             let pct = total > 0 ? " · \(Int(Double(got) / Double(total) * 100))%" : ""
-            return "\(running.count) downloading\(pct)"
+            return "\(running.count) 个正在下载\(pct)"
         }
-        if downloads.jobs.contains(where: \.failed) { return "Something failed" }
-        if let release = updates.available { return "Husk \(release.version) is out" }
-        if guest.update.isSomething { return "Android update ready" }
-        return "Up to date"
+        if downloads.jobs.contains(where: \.failed) { return "有下载失败" }
+        if let release = updates.available { return "Husk \(release.version) 已发布" }
+        if guest.update.isSomething { return "Android 更新就绪" }
+        return "已是最新"
     }
 
     var body: some View {
@@ -358,7 +358,7 @@ private struct DownloadsTile: View {
                 VStack(alignment: .leading, spacing: 18) {
                     TileGlyph(systemImage: "arrow.down", color: .indigo)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Downloads").font(.headline).foregroundStyle(.primary)
+                        Text("下载").font(.headline).foregroundStyle(.primary)
                         Text(status).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
@@ -380,7 +380,7 @@ private struct AndroidTile: View {
                         TileGlyph(systemImage: "apps.iphone", color: AndroidMark.green, size: 40)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Android").font(.headline).foregroundStyle(.primary)
-                            Text("For apps the translation layer can't run yet")
+                            Text("运行转译层暂不支持的应用")
                                 .font(.footnote).foregroundStyle(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
@@ -392,7 +392,7 @@ private struct AndroidTile: View {
                 Button {
                     if router.androidStarted { router.openGuest() } else { router.startAndroid() }
                 } label: {
-                    Text(router.androidStarted ? "Open" : "Start")
+                    Text(router.androidStarted ? "打开" : "启动")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(.primary)
                         .padding(.horizontal, 14)
@@ -432,16 +432,15 @@ private struct WelcomeCard: View {
                 .frame(width: 60, height: 60)
                 .background(Color.accentColor.opacity(0.15), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             VStack(alignment: .leading, spacing: 6) {
-                Text("Add your first game")
+                Text("添加你的第一个游戏")
                     .font(.system(.title2, design: .rounded).weight(.bold))
-                Text("Pick an APK or a bundle (.xapk, .apkm, .apks), or share one to Husk from Files or Safari. Games run "
-                   + "straight on your iPhone. Other apps run inside Android.")
+                Text("选择一个 APK 或安装包（.xapk、.apkm、.apks），或从“文件”与 Safari 共享到 Husk。游戏直接在 iPhone 上运行，其他应用在 Android 内运行。")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Button { router.addSomething() } label: {
-                Text("Add a Game or App").frame(maxWidth: .infinity)
+                Text("添加游戏或应用").frame(maxWidth: .infinity)
             }
             .buttonStyle(PrimaryButtonStyle())
         }
@@ -458,7 +457,7 @@ private struct ShelfHeader: View {
         HStack(alignment: .firstTextBaseline) {
             Text(title).font(.system(.title3, design: .rounded).weight(.bold))
             Spacer()
-            Button("See All", action: seeAll).font(.subheadline.weight(.semibold))
+            Button("查看全部", action: seeAll).font(.subheadline.weight(.semibold))
         }
         .padding(.bottom, -10)
     }
@@ -568,16 +567,16 @@ struct LibraryScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack {
-                        Text("Library")
+                        Text("媒体库")
                             .font(.system(size: 28, weight: .heavy, design: .rounded))
                         Spacer()
                         HeaderButton(systemImage: "plus") { router.addSomething() }
-                            .accessibilityLabel("Add a Game or App")
+                            .accessibilityLabel("添加游戏或应用")
                     }
                     .padding(.horizontal, 4)
                     .padding(.bottom, 6)
-                    SearchField(text: $query, prompt: "Search games and apps")
-                    Picker("Show", selection: $router.libraryFilter) {
+                    SearchField(text: $query, prompt: "搜索游戏和应用")
+                    Picker("显示", selection: $router.libraryFilter) {
                         ForEach(LibraryFilter.allCases) { Text($0.title).tag($0) }
                     }
                     .pickerStyle(.segmented)
@@ -592,10 +591,10 @@ struct LibraryScreen: View {
                     let apps = (matches(query, "Android") ? [LibraryItem.android] : []) + items.filter { !$0.isGame }
 
                     if router.libraryFilter != .apps {
-                        section("Games", games, empty: query.isEmpty ? "Add a game with the + button." : nil)
+                        section("游戏", games, empty: query.isEmpty ? "通过 + 按钮添加游戏。" : nil)
                     }
                     if router.libraryFilter != .games {
-                        section("Apps", apps, empty: nil)
+                        section("应用", apps, empty: nil)
                     }
                     if !query.isEmpty, games.isEmpty, apps.isEmpty { NoResults(query: query) }
                 }
@@ -643,10 +642,10 @@ struct LibraryScreen: View {
         switch item {
         case .game(let g):
             if g.packageName == GeodeSupport.launcherPackage { return "Geode" }
-            return g.report?.canRun == true ? nil : "May not run"
+            return g.report?.canRun == true ? nil : "可能无法运行"
         case .android:
-            if AndroidHost.shared.isReady { return "Running" }
-            return guest.state == .ready ? nil : "Not installed"
+            if AndroidHost.shared.isReady { return "运行中" }
+            return guest.state == .ready ? nil : "未安装"
         case .app: return nil
         }
     }
@@ -753,14 +752,14 @@ struct SearchField: View {
                         Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Clear")
+                    .accessibilityLabel("清除")
                 }
             }
             .padding(.horizontal, 10)
             .frame(height: 38)
             .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             if focused {
-                Button("Cancel") { text = ""; focused = false }
+                Button("取消") { text = ""; focused = false }
                     .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
@@ -774,8 +773,8 @@ struct NoResults: View {
     var body: some View {
         VStack(spacing: 8) {
             Image(systemName: "magnifyingglass").font(.system(size: 28, weight: .light)).foregroundStyle(.secondary)
-            Text("No Results").font(.headline)
-            Text("Nothing here is called “\(query)”.").font(.subheadline).foregroundStyle(.secondary)
+            Text("无结果").font(.headline)
+            Text("未找到与“\(query)”相关的项目。").font(.subheadline).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 48)
@@ -819,6 +818,6 @@ private struct LibraryRouteView: View {
 
 private struct GoneView: View {
     var body: some View {
-        Text("This was removed.").foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
+        Text("该项目已被移除。").foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

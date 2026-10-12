@@ -1,0 +1,8 @@
+/* InfoPlist.strings (zh-Hans) */
+"CFBundleDisplayName" = "Husk";
+"CFBundleName" = "Husk";
+"NSLocalNetworkUsageDescription" = "Husk 需要访问本地网络以在此 iPhone 上启用免电脑 JIT 配对。";
+"Android App" = "Android 应用";
+"Android App Bundle (XAPK)" = "Android 应用分卷 (XAPK)";
+"Android App Bundle (APKM)" = "Android 应用分卷 (APKM)";
+"Android App Bundle (APKS)" = "Android 应用分卷 (APKS)";

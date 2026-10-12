@@ -30,23 +30,23 @@ final class CrashReport: ObservableObject {
 
         var title: String {
             switch self {
-            case .signal: return "The game crashed"
-            case .startFailed: return "The game could not start"
-            case .unknown: return "Husk closed while the game was running"
+            case .signal: return "游戏发生异常崩溃"
+            case .startFailed: return "游戏未能成功启动"
+            case .unknown: return "游戏运行时 Husk 异常退出"
             case .diagnosed(let d): return d.title
             }
         }
         var detail: String {
             switch self {
             case .signal(let s):
-                let name = [11: "SIGSEGV, a bad memory access", 6: "SIGABRT, the game or a library gave up",
-                            4: "SIGILL, an instruction this device does not run", 8: "SIGFPE, an arithmetic error",
-                            12: "SIGSYS, a system call iOS does not allow"][s] ?? "signal \(s)"
-                return "It stopped with \(name). The report has the full log of that run."
+                let name = [11: "SIGSEGV（内存非法访问）", 6: "SIGABRT（游戏或底层库中止运行）",
+                            4: "SIGILL（非法指令，此设备无法执行）", 8: "SIGFPE（浮点算术计算错误）",
+                            12: "SIGSYS（系统调用被 iOS 拦截拒绝）"][s] ?? "信号 \(s)"
+                return "进程因 \(name) 终止。诊断报告中包含该次运行的完整日志。"
             case .startFailed:
-                return "The runtime could not start it. The report says which part was missing."
+                return "运行时无法启动该游戏。报告中列出了缺失的具体模块。"
             case .unknown:
-                return "Nothing was recorded, which usually means iOS ended Husk for using too much memory, or Husk was closed from the app switcher."
+                return "未记录到异常信息。通常代表 iOS 因内存超限杀死了 Husk 进程，或者用户从多任务后台划掉了应用。"
             case .diagnosed(let d):
                 return d.detail
             }
@@ -110,7 +110,7 @@ final class CrashReport: ObservableObject {
         }
         if let d = AppDiagnosis.fromLog(lines.joined(separator: "\n")) { cause = .diagnosed(d) }
         let time = (info["time"] as? Double).map { Date(timeIntervalSince1970: $0) }
-        pending = Report(game: info["label"] as? String ?? "A game", appID: info["id"] as? String ?? "",
+        pending = Report(game: info["label"] as? String ?? "游戏", appID: info["id"] as? String ?? "",
                          cause: cause, when: time, excerpt: Array(Self.interesting(lines).suffix(14)))
         HuskLog.log("crash", "\(pending!.game) did not close normally last run: \(cause.title)")
         switch cause {
@@ -150,9 +150,9 @@ final class CrashReport: ObservableObject {
             text += "Engine   : \(app.report?.nativeEngine.map { "\($0)" } ?? "?")\n"
         }
         text += "\n---- husk.log of that run ----\n"
-        text += (try? String(contentsOf: previousLogURL, encoding: .utf8)) ?? "(not kept)\n"
+        text += (try? String(contentsOf: previousLogURL, encoding: .utf8)) ?? "(未保留)\n"
         text += "\n---- native output of that run ----\n"
-        text += (try? String(contentsOf: HuskLog.previousNativeLogURL, encoding: .utf8)) ?? "(none)\n"
+        text += (try? String(contentsOf: HuskLog.previousNativeLogURL, encoding: .utf8)) ?? "(无)\n"
         let safe = r.game.replacingOccurrences(of: "/", with: "-")
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("Husk crash report - \(safe).txt")
         do { try text.write(to: url, atomically: true, encoding: .utf8) } catch { return nil }
@@ -190,7 +190,7 @@ struct CrashReportSheet: View {
 
                     if !report.excerpt.isEmpty {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Last lines").font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
+                            Text("崩溃前最后日志行").font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
                             Text(report.excerpt.joined(separator: "\n"))
                                 .font(.system(size: 10.5, design: .monospaced))
                                 .textSelection(.enabled)
@@ -202,26 +202,26 @@ struct CrashReportSheet: View {
 
                     if let file {
                         ShareLink(item: file) {
-                            Label("Share Report", systemImage: "square.and.arrow.up")
+                            Label("分享崩溃诊断报告", systemImage: "square.and.arrow.up")
                                 .frame(maxWidth: .infinity).padding(.vertical, 6)
                         }
                         .buttonStyle(.borderedProminent)
                     }
                     if let subject {
                         Button { reporting = subject } label: {
-                            Label("Report to the Compatibility List", systemImage: "list.bullet.clipboard")
+                            Label("提交到在线兼容性列表", systemImage: "list.bullet.clipboard")
                                 .frame(maxWidth: .infinity).padding(.vertical, 6)
                         }
                         .buttonStyle(.bordered)
                     }
-                    Text("The report holds the full log of that run and which device and build it was on. Nothing is sent anywhere unless you share it.")
+                    Text("此报告包含本次运行的完整排查日志、设备型号及系统版本。除非你主动选择分享，否则不会向任何服务器上传。")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 .padding(20)
             }
-            .navigationTitle("Crash Report")
+            .navigationTitle("崩溃诊断报告")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
         }
         .task { file = CrashReport.writeReport(report) }
         .sheet(item: $reporting) { CompatReportSheet(subject: $0) }
