@@ -113,7 +113,12 @@ void husk_balloon_set_bytes(int64_t target_bytes);
 /* --- Forward declarations for BGContinuedProcessingTask (iOS 26+) on iOS <= 18 SDKs --- */
 #if defined(__OBJC__)
 #import <BackgroundTasks/BackgroundTasks.h>
+#import <Foundation/Foundation.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
 @interface BGContinuedProcessingTask : BGTask
+@property (nonatomic, strong, readonly) NSProgress *progress;
 - (void)updateTitle:(NSString *)title subtitle:(NSString *)subtitle;
 @end
 
@@ -125,6 +130,8 @@ typedef NS_ENUM(NSInteger, BGContinuedProcessingTaskStrategy) {
 - (instancetype)initWithIdentifier:(NSString *)identifier title:(NSString *)title subtitle:(NSString *)subtitle;
 @property (nonatomic, assign) BGContinuedProcessingTaskStrategy strategy;
 @end
+
+NS_ASSUME_NONNULL_END
 #endif
 
 #endif /* HUSK_BRIDGE_H */
