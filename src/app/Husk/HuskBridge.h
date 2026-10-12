@@ -110,5 +110,21 @@ void husk_balloon_set_bytes(int64_t target_bytes);
    docs/04-translation-layer.md for why the two are kept apart. */
 #include "../../translation-layer/husk-tl.h"
 #include "../../translation-layer-next/husk-tl-unity-app.h"
+/* --- Forward declarations for BGContinuedProcessingTask (iOS 26+) on iOS <= 18 SDKs --- */
+#if defined(__OBJC__)
+#import <BackgroundTasks/BackgroundTasks.h>
+@interface BGContinuedProcessingTask : BGTask
+- (void)updateTitle:(NSString *)title subtitle:(NSString *)subtitle;
+@end
+
+typedef NS_ENUM(NSInteger, BGContinuedProcessingTaskStrategy) {
+    BGContinuedProcessingTaskStrategyFail = 0
+};
+
+@interface BGContinuedProcessingTaskRequest : BGTaskRequest
+- (instancetype)initWithIdentifier:(NSString *)identifier title:(NSString *)title subtitle:(NSString *)subtitle;
+@property (nonatomic, assign) BGContinuedProcessingTaskStrategy strategy;
+@end
+#endif
 
 #endif /* HUSK_BRIDGE_H */
