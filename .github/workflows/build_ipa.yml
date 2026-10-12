@@ -18,9 +18,9 @@ jobs:
         run: |
           rustup target add aarch64-apple-ios
 
-      - name: Install xcodegen
+      - name: Install dependencies (qemu, xcodegen)
         run: |
-          brew install xcodegen
+          brew install qemu xcodegen
 
       - name: Download official upstream release
         run: |
@@ -28,19 +28,44 @@ jobs:
           curl -fL --retry 3 -o /tmp/upstream/Husk.ipa https://github.com/Leviidev/Husk/releases/download/2.0/Husk.ipa
           unzip -q /tmp/upstream/Husk.ipa -d /tmp/upstream/unpacked
 
-      - name: Stage prebuilt frameworks and libraries
+      - name: Stage prebuilt frameworks, assets, and libraries
         run: |
+          UPSTREAM="/tmp/upstream/unpacked/Payload/Husk.app"
+          
           mkdir -p build/ios-arm64/lib build/ios-arm64/sysroot/lib src/app/Frameworks
+          mkdir -p guests/phase0
+          mkdir -p third_party/build/qemu-10.0.12-utm/pc-bios
+          mkdir -p build/android-system
+          mkdir -p build/java-runtime
           
           # Stage dylibs for Xcode linking
-          cp /tmp/upstream/unpacked/Payload/Husk.app/Frameworks/libqemu-aarch64-softmmu.dylib build/ios-arm64/lib/
-          cp /tmp/upstream/unpacked/Payload/Husk.app/Frameworks/libANGLE-shared.dylib build/ios-arm64/sysroot/lib/
-          cp /tmp/upstream/unpacked/Payload/Husk.app/Frameworks/libFilePickerFix.dylib src/app/Frameworks/
+          cp "$UPSTREAM/Frameworks/libqemu-aarch64-softmmu.dylib" build/ios-arm64/lib/
+          cp "$UPSTREAM/Frameworks/libANGLE-shared.dylib" build/ios-arm64/sysroot/lib/
+          cp "$UPSTREAM/Frameworks/libFilePickerFix.dylib" src/app/Frameworks/
           
-          # If MoltenVK exists in official build, stage it
-          if [ -d /tmp/upstream/unpacked/Payload/Husk.app/Frameworks/MoltenVK.framework ]; then
-            mkdir -p build/ios-arm64/lib/MoltenVK.xcframework/ios-arm64
-            cp -R /tmp/upstream/unpacked/Payload/Husk.app/Frameworks/MoltenVK.framework build/ios-arm64/lib/MoltenVK.xcframework/ios-arm64/
+          # Create MoltenVK.xcframework from upstream MoltenVK.framework
+          if [ -d "$UPSTREAM/Frameworks/MoltenVK.framework" ]; then
+            xcodebuild -create-xcframework \
+              -framework "$UPSTREAM/Frameworks/MoltenVK.framework" \
+              -output build/ios-arm64/lib/MoltenVK.xcframework
+          fi
+          
+          # Stage Phase 0 guest files
+          cp "$UPSTREAM/vmlinuz-virt" guests/phase0/
+          cp "$UPSTREAM/initramfs-virt" guests/phase0/
+          
+          # Stage BIOS / firmware for preBuildScripts
+          bzip2 -c "$UPSTREAM/edk2-aarch64-code.fd" > third_party/build/qemu-10.0.12-utm/pc-bios/edk2-aarch64-code.fd.bz2
+          if [ -d "$UPSTREAM/pc-bios" ]; then
+            cp -R "$UPSTREAM/pc-bios/"* third_party/build/qemu-10.0.12-utm/pc-bios/ 2>/dev/null || true
+          fi
+          
+          # Stage Android system and Java runtime
+          if [ -d "$UPSTREAM/android-system" ]; then
+            cp -R "$UPSTREAM/android-system/"* build/android-system/ 2>/dev/null || true
+          fi
+          if [ -d "$UPSTREAM/java-runtime" ]; then
+            cp -R "$UPSTREAM/java-runtime/"* build/java-runtime/ 2>/dev/null || true
           fi
           
           # Build on-device pairing Rust library
@@ -63,8 +88,8 @@ jobs:
       - name: Package Chinese IPA & TrollStore TIPA
         run: |
           mkdir -p dist/Payload
-          # Base bundle structure from upstream release
-          cp -R /tmp/upstream/unpacked/Payload/Husk.app dist/Payload/
+          UPSTREAM="/tmp/upstream/unpacked/Payload/Husk.app"
+          cp -R "$UPSTREAM" dist/Payload/
           
           # Replace with newly compiled translated Husk binary
           BUILT_APP="src/app/build_derived/Build/Products/Release-iphoneos/Husk.app"
